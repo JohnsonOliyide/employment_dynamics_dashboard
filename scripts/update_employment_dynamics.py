@@ -28,6 +28,8 @@ NATIONAL_SERIES = {
     "Leisure and hospitality": "CES7000000001",
     "Other services": "CES8000000001",
     "Government": "CES9000000001",
+    "Mining and logging": "CES1000000001",
+"Utilities": "CES4422000001",
 }
 
 STATES = {
