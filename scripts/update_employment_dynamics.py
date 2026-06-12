@@ -2,15 +2,17 @@
 import csv
 import json
 import time
+import datetime as dt
 from pathlib import Path
 import requests
+
 
 BLS_API_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 OUT_DIR = Path("data")
 OUT_DIR.mkdir(exist_ok=True)
 
 START_YEAR = "2015"
-END_YEAR = "2026"
+END_YEAR = str(dt.date.today().year)
 
 NATIONAL_SERIES = {
     "Total nonfarm": "CES0000000001",
