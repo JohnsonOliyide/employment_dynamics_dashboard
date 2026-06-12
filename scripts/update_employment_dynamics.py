@@ -101,53 +101,64 @@ STATE_ABBR = {
 }
 
 
+
+
 def fetch_bls(series_dict):
     series_ids = list(series_dict.values())
-    payload = {
-        "seriesid": series_ids,
-        "startyear": START_YEAR,
-        "endyear": END_YEAR,
-    }
-
-    print(f"Requesting {len(series_ids)} BLS series...")
-
-    response = requests.post(
-        BLS_API_URL,
-        data=json.dumps(payload),
-        headers={"Content-type": "application/json"},
-        timeout=120,
-    )
-    response.raise_for_status()
-
-    data = response.json()
-
-    if data.get("status") != "REQUEST_SUCCEEDED":
-        raise RuntimeError(data)
-
-    out = {}
-
     reverse = {v: k for k, v in series_dict.items()}
+    out = {name: {} for name in series_dict.keys()}
 
-    for series in data["Results"]["series"]:
-        name = reverse[series["seriesID"]]
-        rows = []
+    start = int(START_YEAR)
+    end = int(END_YEAR)
 
-        for item in series["data"]:
-            period = item["period"]
+    year_blocks = []
+    y = start
+    while y <= end:
+        block_end = min(y + 9, end)
+        year_blocks.append((y, block_end))
+        y = block_end + 1
 
-            if not period.startswith("M") or period == "M13":
-                continue
+    for start_year, end_year in year_blocks:
+        payload = {
+            "seriesid": series_ids,
+            "startyear": str(start_year),
+            "endyear": str(end_year),
+        }
 
-            year = int(item["year"])
-            month = int(period[1:])
-            date = f"{year}-{month:02d}-01"
-            value = float(item["value"])
+        print(f"Requesting {len(series_ids)} BLS series for {start_year}-{end_year}...")
 
-            rows.append((date, value))
+        response = requests.post(
+            BLS_API_URL,
+            data=json.dumps(payload),
+            headers={"Content-type": "application/json"},
+            timeout=120,
+        )
+        response.raise_for_status()
 
-        out[name] = dict(sorted(rows))
+        data = response.json()
 
-    return out
+        if data.get("status") != "REQUEST_SUCCEEDED":
+            raise RuntimeError(data)
+
+        for series in data["Results"]["series"]:
+            name = reverse[series["seriesID"]]
+
+            for item in series["data"]:
+                period = item["period"]
+
+                if not period.startswith("M") or period == "M13":
+                    continue
+
+                year = int(item["year"])
+                month = int(period[1:])
+                date = f"{year}-{month:02d}-01"
+                value = float(item["value"])
+
+                out[name][date] = value
+
+        time.sleep(1)
+
+    return {name: dict(sorted(values.items())) for name, values in out.items()}
 
 
 def pct_change(current, previous):
