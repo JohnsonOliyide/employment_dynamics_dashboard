@@ -104,14 +104,18 @@ STATE_ABBR = {
 
 
 
-
 def fetch_bls(series_dict):
-    series_ids = list(series_dict.values())
     reverse = {v: k for k, v in series_dict.items()}
     out = {name: {} for name in series_dict.keys()}
 
     start = int(START_YEAR)
     end = int(END_YEAR)
+
+    series_ids = list(series_dict.values())
+
+    # BLS API can fail or return incomplete results if too many series are requested at once.
+    # So we request smaller groups of series.
+    batch_size = 20
 
     year_blocks = []
     y = start
@@ -121,47 +125,58 @@ def fetch_bls(series_dict):
         y = block_end + 1
 
     for start_year, end_year in year_blocks:
-        payload = {
-            "seriesid": series_ids,
-            "startyear": str(start_year),
-            "endyear": str(end_year),
-        }
+        for i in range(0, len(series_ids), batch_size):
+            batch = series_ids[i:i + batch_size]
 
-        print(f"Requesting {len(series_ids)} BLS series for {start_year}-{end_year}...")
+            payload = {
+                "seriesid": batch,
+                "startyear": str(start_year),
+                "endyear": str(end_year),
+            }
 
-        response = requests.post(
-            BLS_API_URL,
-            data=json.dumps(payload),
-            headers={"Content-type": "application/json"},
-            timeout=120,
-        )
-        response.raise_for_status()
+            print(
+                f"Requesting {len(batch)} BLS series "
+                f"for {start_year}-{end_year}..."
+            )
 
-        data = response.json()
+            response = requests.post(
+                BLS_API_URL,
+                data=json.dumps(payload),
+                headers={"Content-type": "application/json"},
+                timeout=120,
+            )
+            response.raise_for_status()
 
-        if data.get("status") != "REQUEST_SUCCEEDED":
-            raise RuntimeError(data)
+            data = response.json()
 
-        for series in data["Results"]["series"]:
-            name = reverse[series["seriesID"]]
+            if data.get("status") != "REQUEST_SUCCEEDED":
+                raise RuntimeError(data)
 
-            for item in series["data"]:
-                period = item["period"]
+            returned_series = data.get("Results", {}).get("series", [])
 
-                if not period.startswith("M") or period == "M13":
+            for series in returned_series:
+                series_id = series["seriesID"]
+                name = reverse.get(series_id)
+
+                if name is None:
                     continue
 
-                year = int(item["year"])
-                month = int(period[1:])
-                date = f"{year}-{month:02d}-01"
-                value = float(item["value"])
+                for item in series["data"]:
+                    period = item["period"]
 
-                out[name][date] = value
+                    if not period.startswith("M") or period == "M13":
+                        continue
 
-        time.sleep(1)
+                    year = int(item["year"])
+                    month = int(period[1:])
+                    date = f"{year}-{month:02d}-01"
+                    value = float(item["value"])
+
+                    out[name][date] = value
+
+            time.sleep(1)
 
     return {name: dict(sorted(values.items())) for name, values in out.items()}
-
 
 def pct_change(current, previous):
     if current is None or previous in (None, 0):
