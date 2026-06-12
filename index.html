@@ -9,180 +9,695 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#5c667a;--border:#dbe3ef;
-  --shadow:0 14px 35px rgba(15,23,42,.08);--radius:22px;--danger:#b91c1c;
-  --ok:#166534;--blue:#1d4ed8;--navy:#0b2f5b
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --text:#172033;
+  --muted:#5c667a;
+  --border:#dbe3ef;
+  --shadow:0 14px 35px rgba(15,23,42,.08);
+  --radius:22px;
+  --danger:#b91c1c;
+  --ok:#166534;
+  --blue:#1d4ed8;
+  --navy:#0b2f5b;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#f8fbff 0%,#f4f7fb 100%);color:var(--text);line-height:1.5}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:linear-gradient(180deg,#f8fbff 0%,#f4f7fb 100%);
+  color:var(--text);
+  line-height:1.5;
+}
 .container{max-width:1420px;margin:0 auto;padding:30px 18px 48px}
-.hero{background:linear-gradient(135deg,#0b1f3a 0%,#0b2f5b 65%,#123f78 100%);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:28px;box-shadow:var(--shadow);padding:30px;margin-bottom:22px}
+.hero{
+  background:linear-gradient(135deg,#0b1f3a 0%,#0b2f5b 65%,#123f78 100%);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:28px;
+  box-shadow:var(--shadow);
+  padding:30px;
+  margin-bottom:22px;
+}
 .hero h1{margin:0 0 10px;font-size:clamp(1.9rem,3vw,2.8rem);line-height:1.05;letter-spacing:-.02em}
-.hero p{margin:0 0 10px;color:rgba(255,255,255,.82);max-width:1120px}
+.hero p{margin:0 0 10px;color:rgba(255,255,255,.84);max-width:1120px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
-.span-12{grid-column:span 12}.span-9{grid-column:span 9}.span-3{grid-column:span 3}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-4{grid-column:span 4}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:20px;
+}
+.span-12{grid-column:span 12}
+.span-9{grid-column:span 9}
+.span-8{grid-column:span 8}
+.span-6{grid-column:span 6}
+.span-4{grid-column:span 4}
+.span-3{grid-column:span 3}
 @media(max-width:980px){.span-9,.span-8,.span-6,.span-4,.span-3{grid-column:span 12}}
 .section-title{margin:0 0 6px;font-size:1.12rem;font-weight:800}
 .subtle{margin:0 0 14px;color:var(--muted);font-size:.95rem}
 .controls{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;align-items:end}
 .control-group{min-width:190px;flex:1}
 .control-group label{display:block;font-size:.84rem;color:var(--muted);font-weight:700;margin-bottom:8px}
-select{width:100%;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:12px;padding:10px 12px;font:inherit}
-.chart-wrap{position:relative;min-height:540px}#stateMap{min-height:585px}
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media(max-width:980px){.metric-grid{grid-template-columns:1fr}}
-.metric{border:1px solid var(--border);border-radius:18px;padding:16px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%)}
-.metric .label{color:var(--muted);font-size:.84rem;font-weight:800;margin-bottom:7px;text-transform:uppercase;letter-spacing:.03em}
+select{
+  width:100%;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 12px;
+  font:inherit;
+}
+select:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+.chart-wrap{position:relative;min-height:540px}
+#stateMap{min-height:585px}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.metric-grid{grid-template-columns:1fr}}
+.metric{
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+}
+.metric .label{
+  color:var(--muted);
+  font-size:.84rem;
+  font-weight:800;
+  margin-bottom:7px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
 .metric .value{font-size:1.55rem;font-weight:850;line-height:1.05;margin-bottom:6px}
 .metric .note{color:var(--muted);font-size:.84rem}
-.side-card{border:1px solid var(--border);border-radius:18px;padding:16px;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);margin-bottom:14px}
-.side-card .label{color:var(--muted);font-size:.84rem;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+.side-card{
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+  margin-bottom:14px;
+}
+.side-card .label{
+  color:var(--muted);
+  font-size:.84rem;
+  font-weight:800;
+  margin-bottom:6px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
 .side-card .value{font-size:1.25rem;font-weight:850;line-height:1.15}
-.note-box{padding:14px 16px;border-radius:18px;background:#f8fbff;border:1px solid var(--border);color:var(--muted);font-size:.92rem}
-.strong{font-weight:800;color:var(--text)}.small{font-size:.85rem;color:var(--muted)}
-.rank-list{margin:0;padding-left:20px;color:var(--text)}.rank-list li{margin-bottom:7px}
-.loading,.error{font-weight:700}.error{color:var(--danger)}.positive{color:var(--ok)}.negative{color:var(--danger)}
-table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left}
+.note-box{
+  padding:14px 16px;
+  border-radius:18px;
+  background:#f8fbff;
+  border:1px solid var(--border);
+  color:var(--muted);
+  font-size:.92rem;
+}
+.chart-explain{
+  margin-top:16px;
+  padding:16px 18px;
+  border-radius:18px;
+  background:#f8fbff;
+  border:1px solid var(--border);
+  color:var(--muted);
+  font-size:.94rem;
+}
+.chart-explain p{margin:0 0 10px}
+.chart-explain p:last-child{margin-bottom:0}
+.strong{font-weight:800;color:var(--text)}
+.small{font-size:.85rem;color:var(--muted)}
+.rank-list{margin:0;padding-left:20px;color:var(--text)}
+.rank-list li{margin-bottom:7px}
+.loading,.error{font-weight:700}
+.error{color:var(--danger)}
+.positive{color:var(--ok)}
+.negative{color:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left}
 th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
 </style>
 </head>
+
 <body>
 <div class="container">
 <section class="hero">
-<h1>U.S. Employment Dynamics Dashboard</h1>
-<p>This dashboard tracks payroll employment dynamics across major industries and U.S. states. The industry view shows which sectors drive employment changes over time and how the sectoral composition of payroll employment evolves.</p>
-<p>The state map shows month-over-month growth, year-over-year growth, or each state’s share of total U.S. payroll employment. Data are based on Current Employment Statistics payroll employment series.</p>
+  <h1>U.S. Employment Dynamics Dashboard</h1>
+  <p>This dashboard tracks payroll employment dynamics across major industries and U.S. states. The industry view shows which sectors drive employment changes over time and how the sectoral composition of payroll employment evolves.</p>
+  <p>The state map shows month-over-month growth, year-over-year growth, or each state’s share of total U.S. payroll employment. Data are based on Current Employment Statistics payroll employment series.</p>
 </section>
 
 <div id="status" class="card span-12 loading">Loading employment data…</div>
 
 <div class="grid">
 <section class="card span-12">
-<h2 class="section-title">Latest Snapshot</h2>
-<p class="subtle">Summary for the selected latest available payroll month.</p>
-<div class="metric-grid" id="metricGrid"></div>
+  <h2 class="section-title">Latest Snapshot</h2>
+  <p class="subtle">Summary for the latest available payroll month.</p>
+  <div class="metric-grid" id="metricGrid"></div>
 </section>
 
 <section class="card span-12">
-<h2 class="section-title">1. Industry Employment Dynamics</h2>
-<p class="subtle">Switch between employment change, contribution to total employment change, and share of total payroll employment.</p>
-<div class="controls">
-<div class="control-group"><label for="industryMonth">Reference month</label><select id="industryMonth"></select></div>
-<div class="control-group"><label for="industryComparison">Comparison</label><select id="industryComparison"><option value="mom">Month-over-month</option><option value="yoy">Year-over-year</option></select></div>
-<div class="control-group"><label for="industryView">View</label><select id="industryView"><option value="change">Employment change</option><option value="contribution">Contribution to employment change</option><option value="share">Share of total employment</option></select></div>
-<div class="control-group"><label for="industryWindow">Display window</label><select id="industryWindow"><option value="24">Last 24 months</option><option value="60">Last 5 years</option><option value="120">Last 10 years</option><option value="all">Full sample</option></select></div>
-</div>
+  <h2 class="section-title">1. Industry Employment Dynamics</h2>
+  <p class="subtle">Switch between employment change, contribution to total employment change, and share of total payroll employment.</p>
+  <div class="controls">
+    <div class="control-group">
+      <label for="industryMonth">Reference month</label>
+      <select id="industryMonth"></select>
+    </div>
+    <div class="control-group">
+      <label for="industryComparison">Comparison</label>
+      <select id="industryComparison">
+        <option value="mom">Month-over-month</option>
+        <option value="yoy">Year-over-year</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="industryView">View</label>
+      <select id="industryView">
+        <option value="change">Employment change</option>
+        <option value="contribution">Contribution to employment change</option>
+        <option value="share">Share of total employment</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="industryWindow">Display window</label>
+      <select id="industryWindow">
+        <option value="24">Last 24 months</option>
+        <option value="60">Last 5 years</option>
+        <option value="120">Last 10 years</option>
+        <option value="all">Full sample</option>
+      </select>
+    </div>
+  </div>
 </section>
 
 <section class="card span-9">
-<h2 class="section-title" id="industryChartTitle">Industry dynamics</h2>
-<p class="subtle" id="industryChartSubtle"></p>
-<div class="chart-wrap"><canvas id="industryChart"></canvas></div>
+  <h2 class="section-title" id="industryChartTitle">Industry dynamics</h2>
+  <p class="subtle" id="industryChartSubtle"></p>
+  <div class="chart-wrap"><canvas id="industryChart"></canvas></div>
+  <div class="chart-explain" id="industryExplanation"></div>
 </section>
 
 <section class="card span-3">
-<h2 class="section-title">Industry Summary</h2>
-<div class="side-card"><div class="label">Total payroll employment</div><div class="value" id="totalPayroll">—</div></div>
-<div class="side-card"><div class="label">Net payroll change</div><div class="value" id="netPayrollChange">—</div></div>
-<div class="side-card"><div class="label">Largest positive sector</div><div class="value" id="largestPositiveSector">—</div></div>
-<div class="side-card"><div class="label">Largest drag / smallest sector</div><div class="value" id="largestNegativeSector">—</div></div>
-<div class="note-box" id="industryNote"></div>
+  <h2 class="section-title">Industry Summary</h2>
+  <p class="subtle" id="industrySummarySubtitle">Summary for the selected view.</p>
+  <div class="side-card">
+    <div class="label" id="industryPrimaryLabel">—</div>
+    <div class="value" id="industryPrimaryValue">—</div>
+    <div class="note" id="industryPrimaryNote">—</div>
+  </div>
+  <div class="side-card">
+    <div class="label" id="industrySecondaryLabel">—</div>
+    <div class="value" id="industrySecondaryValue">—</div>
+    <div class="note" id="industrySecondaryNote">—</div>
+  </div>
+  <div class="note-box" id="industryNote"></div>
 </section>
 
 <section class="card span-12">
-<h2 class="section-title">2. State Employment Map</h2>
-<p class="subtle">Change the state-level metric shown on the map.</p>
-<div class="controls">
-<div class="control-group"><label for="stateMonth">Reference month</label><select id="stateMonth"></select></div>
-<div class="control-group"><label for="stateMetric">Map metric</label><select id="stateMetric"><option value="mom_growth_pct">Month-over-month growth</option><option value="yoy_growth_pct">Year-over-year growth</option><option value="share_us_pct">Share of U.S. employment</option></select></div>
-</div>
+  <h2 class="section-title">2. State Employment Map</h2>
+  <p class="subtle">Change the state-level metric shown on the map. The state date automatically uses the latest month with available state data for the selected metric.</p>
+  <div class="controls">
+    <div class="control-group">
+      <label for="stateMonth">Reference month</label>
+      <select id="stateMonth"></select>
+    </div>
+    <div class="control-group">
+      <label for="stateMetric">Map metric</label>
+      <select id="stateMetric">
+        <option value="mom_growth_pct">Month-over-month growth</option>
+        <option value="yoy_growth_pct">Year-over-year growth</option>
+        <option value="share_us_pct">Share of U.S. employment</option>
+      </select>
+    </div>
+  </div>
 </section>
 
 <section class="card span-8">
-<h2 class="section-title" id="stateMapTitle">State employment growth</h2>
-<p class="subtle" id="stateMapSubtle"></p>
-<div id="stateMap"></div>
+  <h2 class="section-title" id="stateMapTitle">State employment growth</h2>
+  <p class="subtle" id="stateMapSubtle"></p>
+  <div id="stateMap"></div>
 </section>
 
 <section class="card span-4">
-<h2 class="section-title">State Summary</h2>
-<div class="side-card"><div class="label">Top states</div><ol class="rank-list" id="topStates"></ol></div>
-<div class="side-card"><div class="label">Bottom states</div><ol class="rank-list" id="bottomStates"></ol></div>
-<div class="note-box" id="stateNote"></div>
+  <h2 class="section-title">State Summary</h2>
+  <div class="side-card"><div class="label">Top states</div><ol class="rank-list" id="topStates"></ol></div>
+  <div class="side-card"><div class="label">Bottom states</div><ol class="rank-list" id="bottomStates"></ol></div>
+  <div class="note-box" id="stateNote"></div>
 </section>
 
-<section class="card span-6"><h2 class="section-title">Interpretation Notes</h2><div class="note-box" id="interpretationNotes"></div></section>
-<section class="card span-6"><h2 class="section-title">Data Sources and Notes</h2><div class="note-box"><p><span class="strong">Source:</span> Current Employment Statistics payroll employment data from the U.S. Bureau of Labor Statistics.</p><p><span class="strong">Units:</span> Employment levels are in thousands of payroll jobs. CES measures jobs on payrolls, not unique workers.</p><p><span class="strong">Automation:</span> The data files are refreshed automatically through GitHub Actions.</p></div></section>
-</div></div>
+<section class="card span-6">
+  <h2 class="section-title">Interpretation Notes</h2>
+  <div class="note-box" id="interpretationNotes"></div>
+</section>
+
+<section class="card span-6">
+  <h2 class="section-title">Data Sources and Notes</h2>
+  <div class="note-box">
+    <p><span class="strong">Source:</span> Current Employment Statistics payroll employment data from the U.S. Bureau of Labor Statistics.</p>
+    <p><span class="strong">Units:</span> Employment levels are in thousands of payroll jobs. CES measures jobs on payrolls, not unique workers.</p>
+    <p><span class="strong">Important:</span> The official net payroll change uses the total nonfarm series directly. Sector bars show the sectors included in the dashboard, so they may not sum exactly to the official total if a small sector is not included in the sector list. Contribution values are measured in percent, while employment change is measured in thousands of jobs.</p>
+    <p><span class="strong">Automation:</span> The data files are refreshed automatically through GitHub Actions.</p>
+  </div>
+</section>
+</div>
+</div>
 
 <script>
-const INDUSTRY_CSV="./data/industry_employment.csv",STATE_CSV="./data/state_employment.csv";
+const INDUSTRY_CSV="./data/industry_employment.csv";
+const STATE_CSV="./data/state_employment.csv";
+
 const app={industry:[],states:[],industryChart:null};
+
 const ids={
-status:document.getElementById("status"),metricGrid:document.getElementById("metricGrid"),
-industryMonth:document.getElementById("industryMonth"),industryComparison:document.getElementById("industryComparison"),industryView:document.getElementById("industryView"),industryWindow:document.getElementById("industryWindow"),industryChart:document.getElementById("industryChart"),industryChartTitle:document.getElementById("industryChartTitle"),industryChartSubtle:document.getElementById("industryChartSubtle"),totalPayroll:document.getElementById("totalPayroll"),netPayrollChange:document.getElementById("netPayrollChange"),largestPositiveSector:document.getElementById("largestPositiveSector"),largestNegativeSector:document.getElementById("largestNegativeSector"),industryNote:document.getElementById("industryNote"),
-stateMonth:document.getElementById("stateMonth"),stateMetric:document.getElementById("stateMetric"),stateMap:document.getElementById("stateMap"),stateMapTitle:document.getElementById("stateMapTitle"),stateMapSubtle:document.getElementById("stateMapSubtle"),topStates:document.getElementById("topStates"),bottomStates:document.getElementById("bottomStates"),stateNote:document.getElementById("stateNote"),interpretationNotes:document.getElementById("interpretationNotes")
+  status:document.getElementById("status"),
+  metricGrid:document.getElementById("metricGrid"),
+  industryMonth:document.getElementById("industryMonth"),
+  industryComparison:document.getElementById("industryComparison"),
+  industryView:document.getElementById("industryView"),
+  industryWindow:document.getElementById("industryWindow"),
+  industryChart:document.getElementById("industryChart"),
+  industryChartTitle:document.getElementById("industryChartTitle"),
+  industryChartSubtle:document.getElementById("industryChartSubtle"),
+  industryExplanation:document.getElementById("industryExplanation"),
+  industrySummarySubtitle:document.getElementById("industrySummarySubtitle"),
+  industryPrimaryLabel:document.getElementById("industryPrimaryLabel"),
+  industryPrimaryValue:document.getElementById("industryPrimaryValue"),
+  industryPrimaryNote:document.getElementById("industryPrimaryNote"),
+  industrySecondaryLabel:document.getElementById("industrySecondaryLabel"),
+  industrySecondaryValue:document.getElementById("industrySecondaryValue"),
+  industrySecondaryNote:document.getElementById("industrySecondaryNote"),
+  industryNote:document.getElementById("industryNote"),
+  stateMonth:document.getElementById("stateMonth"),
+  stateMetric:document.getElementById("stateMetric"),
+  stateMap:document.getElementById("stateMap"),
+  stateMapTitle:document.getElementById("stateMapTitle"),
+  stateMapSubtle:document.getElementById("stateMapSubtle"),
+  topStates:document.getElementById("topStates"),
+  bottomStates:document.getElementById("bottomStates"),
+  stateNote:document.getElementById("stateNote"),
+  interpretationNotes:document.getElementById("interpretationNotes")
 };
-const COLORS=["#1d4ed8","#0f766e","#7c3aed","#ea580c","#0891b2","#be123c","#4d7c0f","#9333ea","#0369a1","#b45309","#15803d","#6b7280","#111827","#f97316","#2563eb"];
-function parseNumber(v){if(v===null||v===undefined||v==="")return null;const n=Number(v);return Number.isFinite(n)?n:null}
-function monthLabel(s){const d=new Date(s+"T00:00:00");return d.toLocaleDateString(undefined,{year:"numeric",month:"short"})}
-function fmtJobs(x){if(x==null||Number.isNaN(x))return"—";const jobs=x*1000,sign=jobs>0?"+":"";if(Math.abs(jobs)>=1e6)return`${sign}${(jobs/1e6).toFixed(2)}M`;return`${sign}${Math.round(jobs/1000).toLocaleString()}K`}
-function fmtLevel(x){if(x==null||Number.isNaN(x))return"—";const jobs=x*1000;if(Math.abs(jobs)>=1e6)return`${(jobs/1e6).toFixed(2)}M`;return`${Math.round(jobs/1000).toLocaleString()}K`}
-function fmtPct(x){return x==null||Number.isNaN(x)?"—":`${x.toFixed(2)}%`}
-function datesFor(rows){return[...new Set(rows.map(d=>d.date))].sort()}
-function windowDates(dates,end,win){const idx=dates.indexOf(end);if(idx<0)return[];if(win==="all")return dates.slice(0,idx+1);const n=Number(win);return dates.slice(Math.max(0,idx-n+1),idx+1)}
-function metricLabel(m){return m==="mom_growth_pct"?"Month-over-month growth":m==="yoy_growth_pct"?"Year-over-year growth":"Share of U.S. employment"}
-function industryMetric(){const c=ids.industryComparison.value,v=ids.industryView.value;if(v==="share")return"share_pct";if(v==="change")return c==="mom"?"mom_change_thousands":"yoy_change_thousands";return c==="mom"?"mom_contribution_pct":"yoy_contribution_pct"}
-function valueLabel(v){if(ids.industryView.value==="change")return `${Number(v).toFixed(1)}K`;return fmtPct(Number(v))}
-function getTotalNonfarmChange(date, comparison){
-const dates=datesFor(app.industry),idx=dates.indexOf(date),lag=comparison==="mom"?1:12;
-if(idx<lag)return null;
-const current=app.industry.find(d=>d.date===date)?.total_nonfarm_thousands;
-const previous=app.industry.find(d=>d.date===dates[idx-lag])?.total_nonfarm_thousands;
-if(current==null||previous==null)return null;
-return current-previous;
+
+const COLORS=[
+  "#1d4ed8","#0f766e","#7c3aed","#ea580c","#0891b2","#be123c",
+  "#4d7c0f","#9333ea","#0369a1","#b45309","#15803d","#6b7280",
+  "#111827","#f97316","#2563eb"
+];
+
+function parseNumber(v){
+  if(v===null||v===undefined||v==="")return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+function monthLabel(s){
+  const d=new Date(s+"T00:00:00");
+  return d.toLocaleDateString(undefined,{year:"numeric",month:"short"});
+}
+function fmtJobs(x){
+  if(x==null||Number.isNaN(x))return"—";
+  const jobs=x*1000;
+  const sign=jobs>0?"+":"";
+  if(Math.abs(jobs)>=1e6)return `${sign}${(jobs/1e6).toFixed(2)}M`;
+  return `${sign}${Math.round(jobs/1000).toLocaleString()}K`;
+}
+function fmtLevel(x){
+  if(x==null||Number.isNaN(x))return"—";
+  const jobs=x*1000;
+  if(Math.abs(jobs)>=1e6)return `${(jobs/1e6).toFixed(2)}M`;
+  return `${Math.round(jobs/1000).toLocaleString()}K`;
+}
+function fmtPct(x){
+  return x==null||Number.isNaN(x)?"—":`${x.toFixed(2)}%`;
+}
+function datesFor(rows){
+  return [...new Set(rows.map(d=>d.date).filter(Boolean))].sort();
+}
+function windowDates(dates,end,win){
+  const idx=dates.indexOf(end);
+  if(idx<0)return[];
+  if(win==="all")return dates.slice(0,idx+1);
+  const n=Number(win);
+  return dates.slice(Math.max(0,idx-n+1),idx+1);
+}
+function metricLabel(m){
+  if(m==="mom_growth_pct")return"Month-over-month growth";
+  if(m==="yoy_growth_pct")return"Year-over-year growth";
+  return"Share of U.S. employment";
+}
+function industryMetric(){
+  const c=ids.industryComparison.value;
+  const v=ids.industryView.value;
+  if(v==="share")return"share_pct";
+  if(v==="change")return c==="mom"?"mom_change_thousands":"yoy_change_thousands";
+  return c==="mom"?"mom_contribution_pct":"yoy_contribution_pct";
+}
+function valueLabel(v){
+  if(ids.industryView.value==="change")return `${Number(v).toFixed(1)}K`;
+  return fmtPct(Number(v));
+}
+function getTotalNonfarmChange(date,comparison){
+  const dates=datesFor(app.industry);
+  const idx=dates.indexOf(date);
+  const lag=comparison==="mom"?1:12;
+  if(idx<lag)return null;
+  const current=app.industry.find(d=>d.date===date)?.total_nonfarm_thousands;
+  const previous=app.industry.find(d=>d.date===dates[idx-lag])?.total_nonfarm_thousands;
+  if(current==null||previous==null)return null;
+  return current-previous;
+}
+function validStateDates(metric){
+  const grouped={};
+  app.states.forEach(d=>{
+    if(!grouped[d.date])grouped[d.date]=0;
+    if(d[metric]!=null)grouped[d.date]+=1;
+  });
+  return Object.keys(grouped).filter(date=>grouped[date]>0).sort();
+}
+function repopulateStateMonthOptions(keepCurrent=true){
+  const metric=ids.stateMetric.value;
+  const valid=validStateDates(metric);
+  const previous=ids.stateMonth.value;
+  ids.stateMonth.innerHTML="";
+  valid.forEach(date=>{
+    const opt=document.createElement("option");
+    opt.value=date;
+    opt.textContent=monthLabel(date);
+    ids.stateMonth.appendChild(opt);
+  });
+  if(keepCurrent && valid.includes(previous)){
+    ids.stateMonth.value=previous;
+  }else{
+    ids.stateMonth.value=valid[valid.length-1] || "";
+  }
+}
+function toggleIndustryComparison(){
+  const isShare=ids.industryView.value==="share";
+  ids.industryComparison.disabled=isShare;
+  ids.industryComparison.title=isShare ? "Comparison is not used for the share view." : "";
 }
 function renderIndustryChart(){
-const selected=ids.industryMonth.value,comparison=ids.industryComparison.value,view=ids.industryView.value,dates=windowDates(datesFor(app.industry),selected,ids.industryWindow.value),rows=app.industry.filter(d=>dates.includes(d.date)),sectors=[...new Set(rows.map(d=>d.sector))],metric=industryMetric();
-const datasets=sectors.map((sector,i)=>({label:sector,data:dates.map(date=>{const rec=rows.find(d=>d.date===date&&d.sector===sector);return rec?rec[metric]:null}),backgroundColor:COLORS[i%COLORS.length],borderWidth:0}));
-ids.industryChartTitle.textContent=view==="share"?"Industry share of total payroll employment":view==="change"?(comparison==="mom"?"Industry month-over-month employment change":"Industry year-over-year employment change"):(comparison==="mom"?"Industry contribution to month-over-month employment change":"Industry contribution to year-over-year employment change");
-ids.industryChartSubtle.textContent=view==="share"?"Shares show each sector’s employment as a fraction of total nonfarm payroll employment.":view==="change"?"Employment changes are shown in thousands of payroll jobs.":"Contributions show each sector’s employment change as a fraction of total payroll employment change.";
-const ytitle=view==="share"?"Share of employment (%)":view==="change"?"Employment change, thousands":"Contribution (%)";
-if(app.industryChart){app.industryChart.data.labels=dates.map(monthLabel);app.industryChart.data.datasets=datasets;app.industryChart.options.scales.y.title.text=ytitle;app.industryChart.update()}
-else{app.industryChart=new Chart(ids.industryChart,{type:"bar",data:{labels:dates.map(monthLabel),datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${valueLabel(ctx.raw)}`}}},scales:{x:{stacked:true},y:{stacked:true,title:{display:true,text:ytitle},grid:{color:"#e5e7eb"}}}}})}
-renderIndustrySummary();renderMetrics();renderInterpretation();
+  toggleIndustryComparison();
+  const selected=ids.industryMonth.value;
+  const comparison=ids.industryComparison.value;
+  const view=ids.industryView.value;
+  const dates=windowDates(datesFor(app.industry),selected,ids.industryWindow.value);
+  const rows=app.industry.filter(d=>dates.includes(d.date));
+  const sectors=[...new Set(rows.map(d=>d.sector))];
+  const metric=industryMetric();
+
+  const datasets=sectors.map((sector,i)=>({
+    label:sector,
+    data:dates.map(date=>{
+      const rec=rows.find(d=>d.date===date&&d.sector===sector);
+      return rec?rec[metric]:null;
+    }),
+    backgroundColor:COLORS[i%COLORS.length],
+    borderWidth:0
+  }));
+
+  ids.industryChartTitle.textContent=
+    view==="share"?"Industry share of total payroll employment":
+    view==="change"?(comparison==="mom"?"Industry month-over-month employment change":"Industry year-over-year employment change"):
+    (comparison==="mom"?"Industry contribution to month-over-month employment change":"Industry contribution to year-over-year employment change");
+
+  ids.industryChartSubtle.textContent=
+    view==="share"?"Shares show each sector’s employment as a percent of total nonfarm payroll employment in each month.":
+    view==="change"?"Employment changes are shown in thousands of payroll jobs.":
+    "Contributions are shown as percent contributions to total payroll employment change.";
+
+  const ytitle=view==="share"?"Share of employment (%)":view==="change"?"Employment change, thousands":"Contribution to total payroll change (%)";
+
+  if(app.industryChart){
+    app.industryChart.data.labels=dates.map(monthLabel);
+    app.industryChart.data.datasets=datasets;
+    app.industryChart.options.scales.y.title.text=ytitle;
+    app.industryChart.update();
+  }else{
+    app.industryChart=new Chart(ids.industryChart,{
+      type:"bar",
+      data:{labels:dates.map(monthLabel),datasets},
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{mode:"index",intersect:false},
+        plugins:{
+          legend:{position:"bottom"},
+          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${valueLabel(ctx.raw)}`}}
+        },
+        scales:{
+          x:{stacked:true},
+          y:{stacked:true,title:{display:true,text:ytitle},grid:{color:"#e5e7eb"}}
+        }
+      }
+    });
+  }
+  renderIndustrySummary();
+  renderMetrics();
+  renderInterpretation();
 }
 function renderIndustrySummary(){
-const selected=ids.industryMonth.value,comparison=ids.industryComparison.value,view=ids.industryView.value,metric=industryMetric(),changeMetric=comparison==="mom"?"mom_change_thousands":"yoy_change_thousands",rows=app.industry.filter(d=>d.date===selected&&d.sector!=="Residual / Other"),total=rows[0]?.total_nonfarm_thousands??null,totalChange=getTotalNonfarmChange(selected,comparison),sorted=[...rows].filter(d=>d[metric]!=null).sort((a,b)=>b[metric]-a[metric]),positive=sorted.find(d=>d[metric]>0),negative=[...sorted].reverse().find(d=>d[metric]<0);
-ids.totalPayroll.textContent=fmtLevel(total);ids.netPayrollChange.textContent=fmtJobs(totalChange);ids.netPayrollChange.className="value "+(totalChange>=0?"positive":"negative");
-ids.largestPositiveSector.textContent=positive?positive.sector:"—";ids.largestNegativeSector.textContent=view==="share"?(sorted.slice(-1)[0]?.sector||"—"):(negative?negative.sector:"—");
-ids.industryNote.innerHTML=view==="share"?`<p>The share view shows the sectoral composition of payroll employment in <span class="strong">${monthLabel(selected)}</span>.</p>`:`<p>The selected comparison is <span class="strong">${comparison==="mom"?"month-over-month":"year-over-year"}</span> for <span class="strong">${monthLabel(selected)}</span>.</p>`;
+  const selected=ids.industryMonth.value;
+  const comparison=ids.industryComparison.value;
+  const view=ids.industryView.value;
+  const metric=industryMetric();
+  const rows=app.industry.filter(d=>d.date===selected&&d.sector!=="Residual / Other");
+  const sorted=[...rows].filter(d=>d[metric]!=null).sort((a,b)=>b[metric]-a[metric]);
+  const top=sorted[0];
+  const bottom=sorted[sorted.length-1];
+
+  if(view==="change"){
+    const gain=sorted.find(d=>d[metric]>0);
+    const loss=[...sorted].reverse().find(d=>d[metric]<0);
+
+    ids.industrySummarySubtitle.textContent="Summary for employment change.";
+    ids.industryPrimaryLabel.textContent="Largest job gain";
+    ids.industryPrimaryValue.textContent=gain?gain.sector:"—";
+    ids.industryPrimaryNote.textContent=gain?`${fmtJobs(gain[metric])} relative to the selected comparison period.`:"No sector added jobs in this view.";
+
+    ids.industrySecondaryLabel.textContent="Largest job loss";
+    ids.industrySecondaryValue.textContent=loss?loss.sector:"—";
+    ids.industrySecondaryNote.textContent=loss?`${fmtJobs(loss[metric])} relative to the selected comparison period.`:"No sector lost jobs in this view.";
+
+    ids.industryExplanation.innerHTML=`
+      <p><span class="strong">Employment change</span> shows how many payroll jobs each sector added or lost relative to the selected comparison period.</p>
+      <p>Positive bars mean the sector gained jobs. Negative bars mean the sector lost jobs. In the side summary, <span class="strong">Largest job gain</span> is the sector with the biggest increase in payroll jobs, while <span class="strong">Largest job loss</span> is the sector with the biggest decline in payroll jobs.</p>
+    `;
+    ids.industryNote.innerHTML=`<p>The selected comparison is <span class="strong">${comparison==="mom"?"month-over-month":"year-over-year"}</span> for <span class="strong">${monthLabel(selected)}</span>.</p>`;
+  }
+
+  if(view==="contribution"){
+    const positive=sorted.find(d=>d[metric]>0);
+    const drag=[...sorted].reverse().find(d=>d[metric]<0);
+
+    ids.industrySummarySubtitle.textContent="Summary for contribution to employment change.";
+    ids.industryPrimaryLabel.textContent="Largest positive contributor";
+    ids.industryPrimaryValue.textContent=positive?positive.sector:"—";
+    ids.industryPrimaryNote.textContent=positive?`${fmtPct(positive[metric])} of total payroll employment change.`:"No positive contributor in this view.";
+
+    ids.industrySecondaryLabel.textContent="Largest drag";
+    ids.industrySecondaryValue.textContent=drag?drag.sector:"—";
+    ids.industrySecondaryNote.textContent=drag?`${fmtPct(drag[metric])} of total payroll employment change.`:"No negative contributor in this view.";
+
+    ids.industryExplanation.innerHTML=`
+      <p><span class="strong">Contribution to employment change</span> shows each sector’s share of the total payroll employment change, measured in <span class="strong">percent</span>.</p>
+      <p>A positive contribution means the sector helped push total employment higher. A negative contribution means the sector pulled total employment lower. In the side summary, <span class="strong">Largest positive contributor</span> is the sector that explains the largest percent of the total job gain, while <span class="strong">Largest drag</span> is the sector that most reduced total job growth.</p>
+      <p>Example: if total payroll employment rose by 172K and a sector added about 70K jobs, that sector contributed about 41 percent of total job growth.</p>
+    `;
+    ids.industryNote.innerHTML=`<p>The selected comparison is <span class="strong">${comparison==="mom"?"month-over-month":"year-over-year"}</span> for <span class="strong">${monthLabel(selected)}</span>. The official net payroll change uses the total nonfarm series directly.</p>`;
+  }
+
+  if(view==="share"){
+    ids.industrySummarySubtitle.textContent="Summary for sector employment shares.";
+    ids.industryPrimaryLabel.textContent="Largest sector";
+    ids.industryPrimaryValue.textContent=top?top.sector:"—";
+    ids.industryPrimaryNote.textContent=top?`${fmtPct(top[metric])} of total nonfarm payroll employment.`:"—";
+
+    ids.industrySecondaryLabel.textContent="Smallest sector";
+    ids.industrySecondaryValue.textContent=bottom?bottom.sector:"—";
+    ids.industrySecondaryNote.textContent=bottom?`${fmtPct(bottom[metric])} of total nonfarm payroll employment.`:"—";
+
+    ids.industryExplanation.innerHTML=`
+      <p><span class="strong">Share of total employment</span> shows each sector’s size as a percent of total U.S. nonfarm payroll employment in the selected month.</p>
+      <p>This is <span class="strong">not</span> a growth measure. It does not use the month-over-month or year-over-year comparison, and it does not show job gains or job losses. It shows the structure of employment across sectors.</p>
+      <p>In the side summary, <span class="strong">Largest sector</span> is the sector with the highest share of total payroll jobs, while <span class="strong">Smallest sector</span> is the sector with the lowest share among the sectors shown.</p>
+    `;
+    ids.industryNote.innerHTML=`<p>Comparison is not used for the share view. The values are calculated only from employment levels in <span class="strong">${monthLabel(selected)}</span>.</p>`;
+  }
 }
 function renderMetrics(){
-const imonth=ids.industryMonth.value,smonth=ids.stateMonth.value,comp=ids.industryComparison.value,changeMetric=comp==="mom"?"mom_change_thousands":"yoy_change_thousands",contribMetric=comp==="mom"?"mom_contribution_pct":"yoy_contribution_pct",rows=app.industry.filter(d=>d.date===imonth),total=rows[0]?.total_nonfarm_thousands??null,totalChange=getTotalNonfarmChange(imonth,comp),topSector=[...rows].filter(d=>d[contribMetric]!=null).sort((a,b)=>b[contribMetric]-a[contribMetric])[0],stateRows=app.states.filter(d=>d.date===smonth&&d.mom_growth_pct!=null),fastest=[...stateRows].sort((a,b)=>b.mom_growth_pct-a.mom_growth_pct)[0];
-ids.metricGrid.innerHTML=`<div class="metric"><div class="label">Total payroll employment</div><div class="value">${fmtLevel(total)}</div><div class="note">${monthLabel(imonth)}</div></div><div class="metric"><div class="label">${comp==="mom"?"Monthly":"Year-over-year"} payroll change</div><div class="value ${totalChange>=0?"positive":"negative"}">${fmtJobs(totalChange)}</div><div class="note">Total nonfarm payroll change</div></div><div class="metric"><div class="label">Largest contributing sector</div><div class="value">${topSector?topSector.sector:"—"}</div><div class="note">${topSector?fmtPct(topSector[contribMetric]):"—"} contribution</div></div><div class="metric"><div class="label">Fastest growing state</div><div class="value">${fastest?fastest.state:"—"}</div><div class="note">${fastest?fmtPct(fastest.mom_growth_pct):"—"} MoM growth</div></div>`;
+  const imonth=ids.industryMonth.value;
+  const smonth=ids.stateMonth.value;
+  const comp=ids.industryComparison.value;
+  const contribMetric=comp==="mom"?"mom_contribution_pct":"yoy_contribution_pct";
+  const rows=app.industry.filter(d=>d.date===imonth);
+  const total=rows[0]?.total_nonfarm_thousands??null;
+  const totalChange=getTotalNonfarmChange(imonth,comp);
+  const topSector=[...rows].filter(d=>d[contribMetric]!=null).sort((a,b)=>b[contribMetric]-a[contribMetric])[0];
+
+  const stateRows=app.states.filter(d=>d.date===smonth&&d.mom_growth_pct!=null);
+  const fastest=[...stateRows].sort((a,b)=>b.mom_growth_pct-a.mom_growth_pct)[0];
+
+  ids.metricGrid.innerHTML=`
+    <div class="metric">
+      <div class="label">Total payroll employment</div>
+      <div class="value">${fmtLevel(total)}</div>
+      <div class="note">${monthLabel(imonth)}</div>
+    </div>
+    <div class="metric">
+      <div class="label">${comp==="mom"?"Monthly":"Year-over-year"} payroll change</div>
+      <div class="value ${totalChange>=0?"positive":"negative"}">${fmtJobs(totalChange)}</div>
+      <div class="note">Official total nonfarm payroll change</div>
+    </div>
+    <div class="metric">
+      <div class="label">Largest contributing sector</div>
+      <div class="value">${topSector?topSector.sector:"—"}</div>
+      <div class="note">${topSector?fmtPct(topSector[contribMetric]):"—"} contribution</div>
+    </div>
+    <div class="metric">
+      <div class="label">Fastest growing state</div>
+      <div class="value">${fastest?fastest.state:"—"}</div>
+      <div class="note">${fastest?fmtPct(fastest.mom_growth_pct):"—"} MoM growth, ${smonth?monthLabel(smonth):"—"}</div>
+    </div>
+  `;
 }
 function renderStateMap(){
-const date=ids.stateMonth.value,metric=ids.stateMetric.value,rows=app.states.filter(d=>d.date===date&&d[metric]!=null),z=rows.map(d=>d[metric]),maxAbs=Math.max(...z.map(v=>Math.abs(v))),colorscale=metric==="share_us_pct"?[[0,"#dbeafe"],[.5,"#60a5fa"],[1,"#1e3a8a"]]:[[0,"#991b1b"],[.5,"#ffffff"],[1,"#166534"]];
-Plotly.react(ids.stateMap,[{type:"choropleth",locationmode:"USA-states",locations:rows.map(d=>d.abbr),z,text:rows.map(d=>`${d.state}<br>${metricLabel(metric)}: ${fmtPct(d[metric])}<br>Employment: ${fmtLevel(d.employment_thousands)}`),hovertemplate:"%{text}<extra></extra>",colorscale,zmid:metric==="share_us_pct"?undefined:0,zmin:metric==="share_us_pct"?0:-maxAbs,zmax:metric==="share_us_pct"?Math.max(...z):maxAbs,colorbar:{title:metric==="share_us_pct"?"Share":"Growth"}}],{geo:{scope:"usa",projection:{type:"albers usa"}},margin:{t:0,r:0,b:0,l:0},paper_bgcolor:"rgba(0,0,0,0)",plot_bgcolor:"rgba(0,0,0,0)"},{responsive:true,displayModeBar:false});
-ids.stateMapTitle.textContent=`${metricLabel(metric)} by state`;ids.stateMapSubtle.textContent=`Map values are shown for ${monthLabel(date)}.`;renderStateSummary(rows,metric,date);renderMetrics();renderInterpretation();
+  const date=ids.stateMonth.value;
+  const metric=ids.stateMetric.value;
+  const rows=app.states.filter(d=>d.date===date&&d[metric]!=null);
+
+  if(!date || rows.length===0){
+    ids.stateMapTitle.textContent="State data unavailable";
+    ids.stateMapSubtle.textContent="No state observations are available for the selected metric and month.";
+    Plotly.react(ids.stateMap,[],{geo:{scope:"usa"},margin:{t:0,r:0,b:0,l:0}},{responsive:true,displayModeBar:false});
+    ids.topStates.innerHTML="";
+    ids.bottomStates.innerHTML="";
+    ids.stateNote.innerHTML="<p>No state values are available for this selection.</p>";
+    return;
+  }
+
+  const z=rows.map(d=>d[metric]);
+  const maxAbs=Math.max(...z.map(v=>Math.abs(v)));
+  const colorscale=metric==="share_us_pct"
+    ? [[0,"#dbeafe"],[.5,"#60a5fa"],[1,"#1e3a8a"]]
+    : [[0,"#991b1b"],[.5,"#ffffff"],[1,"#166534"]];
+
+  Plotly.react(ids.stateMap,[{
+    type:"choropleth",
+    locationmode:"USA-states",
+    locations:rows.map(d=>d.abbr),
+    z,
+    text:rows.map(d=>`${d.state}<br>${metricLabel(metric)}: ${fmtPct(d[metric])}<br>Employment: ${fmtLevel(d.employment_thousands)}`),
+    hovertemplate:"%{text}<extra></extra>",
+    colorscale,
+    zmid:metric==="share_us_pct"?undefined:0,
+    zmin:metric==="share_us_pct"?0:-maxAbs,
+    zmax:metric==="share_us_pct"?Math.max(...z):maxAbs,
+    colorbar:{title:metric==="share_us_pct"?"Share":"Growth"}
+  }],{
+    geo:{scope:"usa",projection:{type:"albers usa"}},
+    margin:{t:0,r:0,b:0,l:0},
+    paper_bgcolor:"rgba(0,0,0,0)",
+    plot_bgcolor:"rgba(0,0,0,0)"
+  },{responsive:true,displayModeBar:false});
+
+  ids.stateMapTitle.textContent=`${metricLabel(metric)} by state`;
+  ids.stateMapSubtle.textContent=`Map values are shown for ${monthLabel(date)}.`;
+
+  renderStateSummary(rows,metric,date);
+  renderMetrics();
+  renderInterpretation();
 }
 function renderStateSummary(rows,metric,date){
-const sorted=[...rows].sort((a,b)=>b[metric]-a[metric]);
-ids.topStates.innerHTML=sorted.slice(0,5).map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
-ids.bottomStates.innerHTML=sorted.slice(-5).reverse().map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
-ids.stateNote.innerHTML=`<p>The state map is showing <span class="strong">${metricLabel(metric).toLowerCase()}</span> for <span class="strong">${monthLabel(date)}</span>.</p>`;
+  const sorted=[...rows].sort((a,b)=>b[metric]-a[metric]);
+  ids.topStates.innerHTML=sorted.slice(0,5).map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
+  ids.bottomStates.innerHTML=sorted.slice(-5).reverse().map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
+  ids.stateNote.innerHTML=`<p>The state map is showing <span class="strong">${metricLabel(metric).toLowerCase()}</span> for <span class="strong">${monthLabel(date)}</span>.</p>`;
 }
 function renderInterpretation(){
-const industryDate=ids.industryMonth.value,stateDate=ids.stateMonth.value,comparison=ids.industryComparison.value,metric=comparison==="mom"?"mom_contribution_pct":"yoy_contribution_pct",rows=app.industry.filter(d=>d.date===industryDate&&d.sector!=="Residual / Other"),top=[...rows].filter(d=>d[metric]!=null).sort((a,b)=>b[metric]-a[metric])[0],smetric=ids.stateMetric.value,srows=app.states.filter(d=>d.date===stateDate&&d[smetric]!=null),topState=[...srows].sort((a,b)=>b[smetric]-a[smetric])[0];
-ids.interpretationNotes.innerHTML=`<p>For <span class="strong">${monthLabel(industryDate)}</span>, the largest positive sector in the selected industry comparison is <span class="strong">${top?top.sector:"—"}</span>.</p><p>For the state map in <span class="strong">${monthLabel(stateDate)}</span>, the top-ranked state by <span class="strong">${metricLabel(smetric).toLowerCase()}</span> is <span class="strong">${topState?topState.state:"—"}</span>.</p>`;
+  const industryDate=ids.industryMonth.value;
+  const stateDate=ids.stateMonth.value;
+  const comparison=ids.industryComparison.value;
+  const metric=comparison==="mom"?"mom_contribution_pct":"yoy_contribution_pct";
+  const rows=app.industry.filter(d=>d.date===industryDate&&d.sector!=="Residual / Other");
+  const top=[...rows].filter(d=>d[metric]!=null).sort((a,b)=>b[metric]-a[metric])[0];
+
+  const smetric=ids.stateMetric.value;
+  const srows=app.states.filter(d=>d.date===stateDate&&d[smetric]!=null);
+  const topState=[...srows].sort((a,b)=>b[smetric]-a[smetric])[0];
+
+  ids.interpretationNotes.innerHTML=`
+    <p>For <span class="strong">${monthLabel(industryDate)}</span>, the largest positive sector in the selected industry comparison is <span class="strong">${top?top.sector:"—"}</span>.</p>
+    <p>For the state map in <span class="strong">${stateDate?monthLabel(stateDate):"—"}</span>, the top-ranked state by <span class="strong">${metricLabel(smetric).toLowerCase()}</span> is <span class="strong">${topState?topState.state:"—"}</span>.</p>
+  `;
 }
-async function fetchCsv(url){const response=await fetch(url+"?ts="+Date.now());if(!response.ok)throw new Error(`Could not fetch ${url}`);return Papa.parse(await response.text(),{header:true,skipEmptyLines:true}).data}
-function processIndustryRows(rows){app.industry=rows.map(d=>({date:d.date,sector:d.sector,employment_thousands:parseNumber(d.employment_thousands),total_nonfarm_thousands:parseNumber(d.total_nonfarm_thousands),mom_change_thousands:parseNumber(d.mom_change_thousands),yoy_change_thousands:parseNumber(d.yoy_change_thousands),mom_contribution_pct:parseNumber(d.mom_contribution_pct),yoy_contribution_pct:parseNumber(d.yoy_contribution_pct),share_pct:parseNumber(d.share_pct)}))}
-function processStateRows(rows){app.states=rows.map(d=>({date:d.date,state:d.state,abbr:d.abbr,employment_thousands:parseNumber(d.employment_thousands),mom_change_thousands:parseNumber(d.mom_change_thousands),yoy_change_thousands:parseNumber(d.yoy_change_thousands),mom_growth_pct:parseNumber(d.mom_growth_pct),yoy_growth_pct:parseNumber(d.yoy_growth_pct),share_us_pct:parseNumber(d.share_us_pct)}))}
-function populateControls(){datesFor(app.industry).forEach(date=>{const opt=document.createElement("option");opt.value=date;opt.textContent=monthLabel(date);ids.industryMonth.appendChild(opt)});datesFor(app.states).forEach(date=>{const opt=document.createElement("option");opt.value=date;opt.textContent=monthLabel(date);ids.stateMonth.appendChild(opt)});ids.industryMonth.value=datesFor(app.industry).slice(-1)[0];ids.stateMonth.value=datesFor(app.states).slice(-1)[0]}
-function attachEvents(){[ids.industryMonth,ids.industryComparison,ids.industryView,ids.industryWindow].forEach(el=>el.addEventListener("change",renderIndustryChart));[ids.stateMonth,ids.stateMetric].forEach(el=>el.addEventListener("change",renderStateMap))}
-async function loadData(){try{ids.status.textContent="Loading industry data…";processIndustryRows(await fetchCsv(INDUSTRY_CSV));ids.status.textContent="Loading state data…";processStateRows(await fetchCsv(STATE_CSV));populateControls();attachEvents();renderIndustryChart();renderStateMap();ids.status.remove()}catch(err){ids.status.className="card span-12 error";ids.status.textContent="ERROR: "+err.message}}
+async function fetchCsv(url){
+  const response=await fetch(url+"?ts="+Date.now());
+  if(!response.ok)throw new Error(`Could not fetch ${url}`);
+  return Papa.parse(await response.text(),{header:true,skipEmptyLines:true}).data;
+}
+function processIndustryRows(rows){
+  app.industry=rows.map(d=>({
+    date:d.date,
+    sector:d.sector,
+    employment_thousands:parseNumber(d.employment_thousands),
+    total_nonfarm_thousands:parseNumber(d.total_nonfarm_thousands),
+    mom_change_thousands:parseNumber(d.mom_change_thousands),
+    yoy_change_thousands:parseNumber(d.yoy_change_thousands),
+    mom_contribution_pct:parseNumber(d.mom_contribution_pct),
+    yoy_contribution_pct:parseNumber(d.yoy_contribution_pct),
+    share_pct:parseNumber(d.share_pct)
+  }));
+}
+function processStateRows(rows){
+  app.states=rows.map(d=>({
+    date:d.date,
+    state:d.state,
+    abbr:d.abbr,
+    employment_thousands:parseNumber(d.employment_thousands),
+    mom_change_thousands:parseNumber(d.mom_change_thousands),
+    yoy_change_thousands:parseNumber(d.yoy_change_thousands),
+    mom_growth_pct:parseNumber(d.mom_growth_pct),
+    yoy_growth_pct:parseNumber(d.yoy_growth_pct),
+    share_us_pct:parseNumber(d.share_us_pct)
+  }));
+}
+function populateControls(){
+  datesFor(app.industry).forEach(date=>{
+    const opt=document.createElement("option");
+    opt.value=date;
+    opt.textContent=monthLabel(date);
+    ids.industryMonth.appendChild(opt);
+  });
+  ids.industryMonth.value=datesFor(app.industry).slice(-1)[0];
+
+  repopulateStateMonthOptions(false);
+}
+function attachEvents(){
+  [ids.industryMonth,ids.industryComparison,ids.industryView,ids.industryWindow].forEach(el=>el.addEventListener("change",renderIndustryChart));
+  ids.stateMetric.addEventListener("change",()=>{
+    repopulateStateMonthOptions(false);
+    renderStateMap();
+  });
+  ids.stateMonth.addEventListener("change",renderStateMap);
+}
+async function loadData(){
+  try{
+    ids.status.textContent="Loading industry data…";
+    processIndustryRows(await fetchCsv(INDUSTRY_CSV));
+    ids.status.textContent="Loading state data…";
+    processStateRows(await fetchCsv(STATE_CSV));
+    populateControls();
+    attachEvents();
+    renderIndustryChart();
+    renderStateMap();
+    ids.status.remove();
+  }catch(err){
+    ids.status.className="card span-12 error";
+    ids.status.textContent="ERROR: "+err.message;
+  }
+}
 loadData();
 </script>
 </body>
