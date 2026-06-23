@@ -152,7 +152,7 @@ th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.
 
 <div class="grid">
 <section class="card span-12">
-  <h2 class="section-title">Latest Snapshot</h2>
+  <h2 class="section-title">Selected-Month Snapshot</h2>
   <p class="subtle">Summary for the latest available payroll month.</p>
   <div class="metric-grid" id="metricGrid"></div>
 </section>
@@ -247,10 +247,7 @@ th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.
   <div class="note-box" id="stateNote"></div>
 </section>
 
-<section class="card span-6">
-  <h2 class="section-title">Interpretation Notes</h2>
-  <div class="note-box" id="interpretationNotes"></div>
-</section>
+
 
 <section class="card span-6">
   <h2 class="section-title">Data Sources and Notes</h2>
@@ -455,7 +452,6 @@ function renderIndustryChart(){
   }
   renderIndustrySummary();
   renderMetrics();
-  renderInterpretation();
 }
 function renderIndustrySummary(){
   const selected=ids.industryMonth.value;
@@ -607,7 +603,7 @@ function renderStateMap(){
 
   renderStateSummary(rows,metric,date);
   renderMetrics();
-  renderInterpretation();
+
 }
 function renderStateSummary(rows,metric,date){
   const sorted=[...rows].sort((a,b)=>b[metric]-a[metric]);
@@ -615,23 +611,7 @@ function renderStateSummary(rows,metric,date){
   ids.bottomStates.innerHTML=sorted.slice(-5).reverse().map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
   ids.stateNote.innerHTML=`<p>The state map is showing <span class="strong">${metricLabel(metric).toLowerCase()}</span> for <span class="strong">${monthLabel(date)}</span>.</p>`;
 }
-function renderInterpretation(){
-  const industryDate=ids.industryMonth.value;
-  const stateDate=ids.stateMonth.value;
-  const comparison=ids.industryComparison.value;
-  const metric=comparison==="mom"?"mom_contribution_pct":"yoy_contribution_pct";
-  const rows=app.industry.filter(d=>d.date===industryDate&&d.sector!=="Residual / Other");
-  const top=[...rows].filter(d=>d[metric]!=null).sort((a,b)=>b[metric]-a[metric])[0];
 
-  const smetric=ids.stateMetric.value;
-  const srows=app.states.filter(d=>d.date===stateDate&&d[smetric]!=null);
-  const topState=[...srows].sort((a,b)=>b[smetric]-a[smetric])[0];
-
-  ids.interpretationNotes.innerHTML=`
-    <p>For <span class="strong">${monthLabel(industryDate)}</span>, the largest positive sector in the selected industry comparison is <span class="strong">${top?top.sector:"—"}</span>.</p>
-    <p>For the state map in <span class="strong">${stateDate?monthLabel(stateDate):"—"}</span>, the top-ranked state by <span class="strong">${metricLabel(smetric).toLowerCase()}</span> is <span class="strong">${topState?topState.state:"—"}</span>.</p>
-  `;
-}
 async function fetchCsv(url){
   const response=await fetch(url+"?ts="+Date.now());
   if(!response.ok)throw new Error(`Could not fetch ${url}`);
