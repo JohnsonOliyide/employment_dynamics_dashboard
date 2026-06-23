@@ -153,7 +153,7 @@ th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.
 <div class="grid">
 <section class="card span-12">
   <h2 class="section-title">Selected-Month Snapshot</h2>
-  <p class="subtle">Summary for the latest available payroll month.</p>
+  <p class="subtle">Summary for the selected payroll month.</p>
   <div class="metric-grid" id="metricGrid"></div>
 </section>
 
@@ -242,14 +242,13 @@ th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.
 
 <section class="card span-4">
   <h2 class="section-title">State Summary</h2>
-  <div class="side-card"><div class="label">Top states</div><ol class="rank-list" id="topStates"></ol></div>
-  <div class="side-card"><div class="label">Bottom states</div><ol class="rank-list" id="bottomStates"></ol></div>
+  <div class="side-card"><div class="label" id="topStatesLabel">Fastest-growing states</div><ol class="rank-list" id="topStates"></ol></div>
+  <div class="side-card"><div class="label" id="bottomStatesLabel">Slowest-growing states</div><ol class="rank-list" id="bottomStates"></ol></div>
   <div class="note-box" id="stateNote"></div>
 </section>
 
 
-
-<section class="card span-6">
+<section class="card span-12">
   <h2 class="section-title">Data Sources and Notes</h2>
   <div class="note-box">
     <p><span class="strong">Source:</span> Current Employment Statistics payroll employment data from the U.S. Bureau of Labor Statistics.</p>
@@ -291,10 +290,11 @@ const ids={
   stateMap:document.getElementById("stateMap"),
   stateMapTitle:document.getElementById("stateMapTitle"),
   stateMapSubtle:document.getElementById("stateMapSubtle"),
+  topStatesLabel:document.getElementById("topStatesLabel"),
+  bottomStatesLabel:document.getElementById("bottomStatesLabel"),
   topStates:document.getElementById("topStates"),
   bottomStates:document.getElementById("bottomStates"),
-  stateNote:document.getElementById("stateNote"),
-  interpretationNotes:document.getElementById("interpretationNotes")
+  stateNote:document.getElementById("stateNote")
 };
 
 const COLORS=[
@@ -484,24 +484,43 @@ function renderIndustrySummary(){
   }
 
   if(view==="contribution"){
-    const positive=sorted.find(d=>d[metric]>0);
-    const drag=[...sorted].reverse().find(d=>d[metric]<0);
+    const totalChange=getTotalNonfarmChange(selected,comparison);
+    const largestPositive=sorted.find(d=>d[metric]>0);
+    const mostNegative=[...sorted].reverse().find(d=>d[metric]<0);
 
     ids.industrySummarySubtitle.textContent="Summary for contribution to employment change.";
-    ids.industryPrimaryLabel.textContent="Largest positive contributor";
-    ids.industryPrimaryValue.textContent=positive?positive.sector:"—";
-    ids.industryPrimaryNote.textContent=positive?`${fmtPct(positive[metric])} of total payroll employment change.`:"No positive contributor in this view.";
 
-    ids.industrySecondaryLabel.textContent="Largest drag";
-    ids.industrySecondaryValue.textContent=drag?drag.sector:"—";
-    ids.industrySecondaryNote.textContent=drag?`${fmtPct(drag[metric])} of total payroll employment change.`:"No negative contributor in this view.";
+    if(totalChange>=0){
+      ids.industryPrimaryLabel.textContent="Largest positive contributor";
+      ids.industryPrimaryValue.textContent=largestPositive?largestPositive.sector:"—";
+      ids.industryPrimaryNote.textContent=largestPositive?`${fmtPct(largestPositive[metric])} of total payroll employment growth.`:"No positive contributor in this view.";
 
-    ids.industryExplanation.innerHTML=`
-      <p><span class="strong">Contribution to employment change</span> shows each sector’s share of the total payroll employment change, measured in <span class="strong">percent</span>.</p>
-      <p>A positive contribution means the sector helped push total employment higher. A negative contribution means the sector pulled total employment lower. In the side summary, <span class="strong">Largest positive contributor</span> is the sector that explains the largest percent of the total job gain, while <span class="strong">Largest drag</span> is the sector that most reduced total job growth.</p>
-      <p>Example: if total payroll employment rose by 172K and a sector added about 70K jobs, that sector contributed about 41 percent of total job growth.</p>
-    `;
-    ids.industryNote.innerHTML=`<p>The selected comparison is <span class="strong">${comparison==="mom"?"month-over-month":"year-over-year"}</span> for <span class="strong">${monthLabel(selected)}</span>. The official net payroll change uses the total nonfarm series directly.</p>`;
+      ids.industrySecondaryLabel.textContent="Largest drag";
+      ids.industrySecondaryValue.textContent=mostNegative?mostNegative.sector:"—";
+      ids.industrySecondaryNote.textContent=mostNegative?`${fmtPct(mostNegative[metric])} of total payroll employment change.`:"No sector reduced employment growth in this view.";
+
+      ids.industryExplanation.innerHTML=`
+        <p><span class="strong">Contribution to employment change</span> shows each sector’s share of the total payroll employment change, measured in <span class="strong">percent</span>.</p>
+        <p>Total payroll employment increased during the selected period. Positive percentages identify sectors that contributed to the increase, while negative percentages identify sectors that reduced total job growth.</p>
+        <p>In the side summary, <span class="strong">Largest positive contributor</span> is the sector that explains the largest percent of the total job gain, while <span class="strong">Largest drag</span> is the sector that most reduced total job growth.</p>
+      `;
+    }else{
+      ids.industryPrimaryLabel.textContent="Largest contributor to the decline";
+      ids.industryPrimaryValue.textContent=largestPositive?largestPositive.sector:"—";
+      ids.industryPrimaryNote.textContent=largestPositive?`${fmtPct(largestPositive[metric])} of the total payroll employment decline.`:"No sector contributed to the decline in this view.";
+
+      ids.industrySecondaryLabel.textContent="Largest offset to the decline";
+      ids.industrySecondaryValue.textContent=mostNegative?mostNegative.sector:"—";
+      ids.industrySecondaryNote.textContent=mostNegative?`${fmtPct(mostNegative[metric])} because the sector added jobs and partially offset the overall decline.`:"No sector offset the decline in this view.";
+
+      ids.industryExplanation.innerHTML=`
+        <p><span class="strong">Contribution to employment change</span> shows each sector’s share of the total payroll employment change, measured in <span class="strong">percent</span>.</p>
+        <p>Total payroll employment declined during the selected period. Positive percentages identify sectors that accounted for the decline because they lost jobs. Negative percentages identify sectors that added jobs and partially offset the overall decline.</p>
+        <p>In the side summary, <span class="strong">Largest contributor to the decline</span> is the sector that accounts for the largest percent of the total job loss, while <span class="strong">Largest offset to the decline</span> is the sector that added the most jobs relative to the overall decline.</p>
+      `;
+    }
+
+    ids.industryNote.innerHTML=`<p>The selected comparison is <span class="strong">${comparison==="mom"?"month-over-month":"year-over-year"}</span> for <span class="strong">${monthLabel(selected)}</span>. The official net payroll change is <span class="strong">${fmtJobs(totalChange)}</span> and uses the total nonfarm series directly.</p>`;
   }
 
   if(view==="share"){
@@ -531,6 +550,12 @@ function renderMetrics(){
   const total=rows[0]?.total_nonfarm_thousands??null;
   const totalChange=getTotalNonfarmChange(imonth,comp);
   const topSector=[...rows].filter(d=>d[contribMetric]!=null).sort((a,b)=>b[contribMetric]-a[contribMetric])[0];
+  const contributionCardLabel=totalChange>=0?"Largest contributing sector":"Largest contributor to decline";
+  const contributionCardNote=topSector
+    ? (totalChange>=0
+        ? `${fmtPct(topSector[contribMetric])} of total payroll employment growth`
+        : `${fmtPct(topSector[contribMetric])} of the total payroll employment decline`)
+    : "—";
 
   const stateRows=app.states.filter(d=>d.date===smonth&&d.mom_growth_pct!=null);
   const fastest=[...stateRows].sort((a,b)=>b.mom_growth_pct-a.mom_growth_pct)[0];
@@ -547,9 +572,9 @@ function renderMetrics(){
       <div class="note">Official total nonfarm payroll change</div>
     </div>
     <div class="metric">
-      <div class="label">Largest contributing sector</div>
+      <div class="label">${contributionCardLabel}</div>
       <div class="value">${topSector?topSector.sector:"—"}</div>
-      <div class="note">${topSector?fmtPct(topSector[contribMetric]):"—"} contribution</div>
+      <div class="note">${contributionCardNote}</div>
     </div>
     <div class="metric">
       <div class="label">Fastest growing state</div>
@@ -579,7 +604,10 @@ function renderStateMap(){
     ? [[0,"#dbeafe"],[.5,"#60a5fa"],[1,"#1e3a8a"]]
     : [[0,"#991b1b"],[.5,"#ffffff"],[1,"#166534"]];
 
-  Plotly.react(ids.stateMap,[{
+  const mapLabels=rows.map(d=>`${d.abbr}: ${fmtPct(d[metric])}`);
+
+  Plotly.react(ids.stateMap,[
+  {
     type:"choropleth",
     locationmode:"USA-states",
     locations:rows.map(d=>d.abbr),
@@ -590,7 +618,22 @@ function renderStateMap(){
     zmid:metric==="share_us_pct"?undefined:0,
     zmin:metric==="share_us_pct"?0:-maxAbs,
     zmax:metric==="share_us_pct"?Math.max(...z):maxAbs,
-    colorbar:{title:metric==="share_us_pct"?"Share":"Growth"}
+    colorbar:{title:metric==="share_us_pct"?"Share":"Growth"},
+    marker:{line:{color:"#ffffff",width:0.8}}
+  },
+  {
+    type:"scattergeo",
+    locationmode:"USA-states",
+    locations:rows.map(d=>d.abbr),
+    mode:"text",
+    text:mapLabels,
+    textfont:{
+      size:9,
+      color:"#111827",
+      family:'Inter, Arial, sans-serif'
+    },
+    hoverinfo:"skip",
+    showlegend:false
   }],{
     geo:{scope:"usa",projection:{type:"albers usa"}},
     margin:{t:0,r:0,b:0,l:0},
@@ -603,15 +646,23 @@ function renderStateMap(){
 
   renderStateSummary(rows,metric,date);
   renderMetrics();
-
 }
 function renderStateSummary(rows,metric,date){
   const sorted=[...rows].sort((a,b)=>b[metric]-a[metric]);
+
+  if(metric==="share_us_pct"){
+    ids.topStatesLabel.textContent="Largest employment shares";
+    ids.bottomStatesLabel.textContent="Smallest employment shares";
+    ids.stateNote.innerHTML=`<p>The rankings show which states account for the largest and smallest shares of total U.S. payroll employment in <span class="strong">${monthLabel(date)}</span>. This is a measure of employment size, not employment growth.</p>`;
+  }else{
+    ids.topStatesLabel.textContent="Fastest-growing states";
+    ids.bottomStatesLabel.textContent="Slowest-growing states";
+    ids.stateNote.innerHTML=`<p>The rankings show the fastest- and slowest-growing states based on <span class="strong">${metricLabel(metric).toLowerCase()}</span> in <span class="strong">${monthLabel(date)}</span>.</p>`;
+  }
+
   ids.topStates.innerHTML=sorted.slice(0,5).map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
   ids.bottomStates.innerHTML=sorted.slice(-5).reverse().map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
-  ids.stateNote.innerHTML=`<p>The state map is showing <span class="strong">${metricLabel(metric).toLowerCase()}</span> for <span class="strong">${monthLabel(date)}</span>.</p>`;
 }
-
 async function fetchCsv(url){
   const response=await fetch(url+"?ts="+Date.now());
   if(!response.ok)throw new Error(`Could not fetch ${url}`);
