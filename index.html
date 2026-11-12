@@ -270,8 +270,8 @@ th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.
 </div>
 
 <script>
-const INDUSTRY_CSV="./data/industry_employment.csv";
-const STATE_CSV="./data/state_employment.csv";
+const INDUSTRY_CSV="https://raw.githubusercontent.com/JohnsonOliyide/employment_dynamics_dashboard/main/data/industry_employment.csv";
+const STATE_CSV="https://raw.githubusercontent.com/JohnsonOliyide/employment_dynamics_dashboard/main/data/state_employment.csv";
 
 const app={industry:[],states:[],industryChart:null};
 
@@ -314,6 +314,7 @@ const COLORS=[
 
 function parseNumber(v){
   if(v===null||v===undefined||v==="")return null;
+  if(!String(v).trim() || String(v).trim()===".")return null;
   const n=Number(v);
   return Number.isFinite(n)?n:null;
 }
@@ -364,12 +365,12 @@ function valueLabel(v){
   return fmtPct(Number(v));
 }
 function getTotalNonfarmChange(date,comparison){
-  const dates=datesFor(app.industry);
-  const idx=dates.indexOf(date);
   const lag=comparison==="mom"?1:12;
-  if(idx<lag)return null;
+  const prior=new Date(date+"T00:00:00Z");
+  prior.setUTCMonth(prior.getUTCMonth()-lag);
+  const priorDate=prior.toISOString().slice(0,10);
   const current=app.industry.find(d=>d.date===date)?.total_nonfarm_thousands;
-  const previous=app.industry.find(d=>d.date===dates[idx-lag])?.total_nonfarm_thousands;
+  const previous=app.industry.find(d=>d.date===priorDate)?.total_nonfarm_thousands;
   if(current==null||previous==null)return null;
   return current-previous;
 }
@@ -673,7 +674,7 @@ function renderStateSummary(rows,metric,date){
   ids.bottomStates.innerHTML=sorted.slice(-5).reverse().map(d=>`<li>${d.state}: <span class="strong">${fmtPct(d[metric])}</span></li>`).join("");
 }
 async function fetchCsv(url){
-  const response=await fetch(url+"?ts="+Date.now());
+  const response=await fetch(url+"?ts="+Date.now(), {signal: AbortSignal.timeout(30000)});
   if(!response.ok)throw new Error(`Could not fetch ${url}`);
   return Papa.parse(await response.text(),{header:true,skipEmptyLines:true}).data;
 }

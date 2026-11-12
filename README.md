@@ -31,3 +31,8 @@ Current Employment Statistics (CES), U.S. Bureau of Labor Statistics.
 
 CES measures payroll jobs, not unique workers. A person with more than one payroll job may be counted more than once.
 
+
+
+## Data refresh reliability
+
+The scheduled workflow validates downloads before replacing published files. The live dashboard reads data directly from the repository so automated data commits are visible without a separate Pages rebuild. Source publication dates differ and missing observations remain missing. Run `python -m unittest discover -s tests` to check refresh safeguards.

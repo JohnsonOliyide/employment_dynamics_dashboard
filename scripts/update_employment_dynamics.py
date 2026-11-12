@@ -1,5 +1,6 @@
 
 import csv
+import tempfile
 import json
 import time
 import datetime as dt
@@ -8,7 +9,7 @@ import requests
 
 
 BLS_API_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
-OUT_DIR = Path("data")
+OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 OUT_DIR.mkdir(exist_ok=True)
 
 START_YEAR = "2015"
@@ -29,7 +30,7 @@ NATIONAL_SERIES = {
     "Other services": "CES8000000001",
     "Government": "CES9000000001",
     "Mining and logging": "CES1000000001",
-"Utilities": "CES4422000001",
+    "Utilities": "CES4422000001",
 }
 
 STATES = {
@@ -139,18 +140,23 @@ def fetch_bls(series_dict):
                 f"for {start_year}-{end_year}..."
             )
 
-            response = requests.post(
-                BLS_API_URL,
-                data=json.dumps(payload),
-                headers={"Content-type": "application/json"},
-                timeout=120,
-            )
-            response.raise_for_status()
-
-            data = response.json()
-
-            if data.get("status") != "REQUEST_SUCCEEDED":
-                raise RuntimeError(data)
+            last_error = None
+            for attempt in range(3):
+                try:
+                    response = requests.post(BLS_API_URL, json=payload, timeout=90)
+                    response.raise_for_status()
+                    data = response.json()
+                    if data.get("status") != "REQUEST_SUCCEEDED":
+                        raise RuntimeError(str(data.get("message", "BLS request failed")))
+                    returned = {x["seriesID"]: x for x in data.get("Results", {}).get("series", [])}
+                    if set(returned) != set(batch) or any(not x.get("data") for x in returned.values()):
+                        raise ValueError("BLS response omitted requested series or observations")
+                    break
+                except (requests.RequestException, ValueError, RuntimeError) as exc:
+                    last_error = exc
+                    if attempt == 2:
+                        raise RuntimeError(f"BLS batch failed for {start_year} through {end_year}: {last_error}") from exc
+                    time.sleep(2 ** attempt)
 
             returned_series = data.get("Results", {}).get("series", [])
 
@@ -176,7 +182,15 @@ def fetch_bls(series_dict):
 
             time.sleep(1)
 
+    if any(not values for values in out.values()):
+        raise ValueError("BLS refresh produced an empty series; previous data will be kept")
     return {name: dict(sorted(values.items())) for name, values in out.items()}
+
+def prior_date(date, months):
+    year, month = map(int, date[:7].split("-"))
+    index = year * 12 + month - 1 - months
+    return f"{index // 12:04d}-{index % 12 + 1:02d}-01"
+
 
 def pct_change(current, previous):
     if current is None or previous in (None, 0):
@@ -192,8 +206,8 @@ def write_industry_data(industry_data):
 
     for i, date in enumerate(dates):
         total_emp = total[date]
-        total_prev = total[dates[i - 1]] if i >= 1 else None
-        total_yoy = total[dates[i - 12]] if i >= 12 else None
+        total_prev = total.get(prior_date(date, 1))
+        total_yoy = total.get(prior_date(date, 12))
 
         total_mom_change = total_emp - total_prev if total_prev is not None else None
         total_yoy_change = total_emp - total_yoy if total_yoy is not None else None
@@ -203,8 +217,8 @@ def write_industry_data(industry_data):
                 continue
 
             emp = values.get(date)
-            prev = values.get(dates[i - 1]) if i >= 1 else None
-            yoy = values.get(dates[i - 12]) if i >= 12 else None
+            prev = values.get(prior_date(date, 1))
+            yoy = values.get(prior_date(date, 12))
 
             mom_change = emp - prev if emp is not None and prev is not None else None
             yoy_change = emp - yoy if emp is not None and yoy is not None else None
@@ -216,9 +230,9 @@ def write_industry_data(industry_data):
                 "total_nonfarm_thousands": total_emp,
                 "mom_change_thousands": mom_change,
                 "yoy_change_thousands": yoy_change,
-                "mom_contribution_pct": None if not total_mom_change else (mom_change / total_mom_change) * 100,
-                "yoy_contribution_pct": None if not total_yoy_change else (yoy_change / total_yoy_change) * 100,
-                "share_pct": None if not total_emp else (emp / total_emp) * 100,
+                "mom_contribution_pct": None if not total_mom_change or mom_change is None else (mom_change / total_mom_change) * 100,
+                "yoy_contribution_pct": None if not total_yoy_change or yoy_change is None else (yoy_change / total_yoy_change) * 100,
+                "share_pct": None if not total_emp or emp is None else (emp / total_emp) * 100,
             })
 
     write_csv(
@@ -247,8 +261,8 @@ def write_state_data(state_data, national_data):
     for state_name, values in state_data.items():
         for i, date in enumerate(dates):
             emp = values.get(date)
-            prev = values.get(dates[i - 1]) if i >= 1 else None
-            yoy = values.get(dates[i - 12]) if i >= 12 else None
+            prev = values.get(prior_date(date, 1))
+            yoy = values.get(prior_date(date, 12))
             us_emp = total.get(date)
 
             rows.append({
@@ -312,11 +326,29 @@ def main():
     print("Downloading state employment data...")
     state_data = fetch_bls(STATES)
 
-    print("Writing industry CSV...")
-    write_industry_data(industry_data)
-
-    print("Writing state CSV...")
-    write_state_data(state_data, industry_data)
+    # Prepare both complete outputs before replacing either published file.
+    global OUT_DIR
+    destination = OUT_DIR
+    with tempfile.TemporaryDirectory(dir=destination.parent) as folder:
+        OUT_DIR = Path(folder)
+        try:
+            write_industry_data(industry_data)
+            write_state_data(state_data, industry_data)
+            for name in ["industry_employment.csv", "state_employment.csv"]:
+                old = destination / name
+                if old.exists():
+                    with old.open() as f:
+                        latest = max(row["date"] for row in csv.DictReader(f)
+                                     if row.get("employment_thousands"))
+                    with (OUT_DIR / name).open() as f:
+                        refreshed = max(row["date"] for row in csv.DictReader(f)
+                                        if row.get("employment_thousands"))
+                    if refreshed < latest:
+                        raise ValueError(f"{name} would regress from {latest} to {refreshed}")
+            for name in ["industry_employment.csv", "state_employment.csv"]:
+                (OUT_DIR / name).replace(destination / name)
+        finally:
+            OUT_DIR = destination
 
     print("Done.")
 

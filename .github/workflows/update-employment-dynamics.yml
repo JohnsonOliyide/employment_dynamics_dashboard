@@ -1,10 +1,22 @@
 name: Update Employment Data
 
 on:
+  schedule:
+    - cron: "25 19 * * 1-5"
+  push:
+    paths:
+      - "scripts/**"
+      - "requirements.txt"
+      - ".github/workflows/**"
   workflow_dispatch:
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
 
 jobs:
   update-data:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
 
     permissions:
@@ -23,6 +35,9 @@ jobs:
         run: |
           pip install requests pandas
 
+      - name: Check refresh safeguards
+        run: python -m unittest discover -s tests
+
       - name: Run update script
         run: |
           python scripts/update_employment_dynamics.py
@@ -32,7 +47,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add .
+          git add data/*.csv
 
           git diff --staged --quiet || git commit -m "Automatic employment data update"
 
